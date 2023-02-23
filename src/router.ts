@@ -1,8 +1,8 @@
-import express, {Request, Response} from "express";
+import dotenv from 'dotenv';
+import express, { Request, Response } from 'express';
+import { Document, MongoClient } from 'mongodb';
 import validator from 'validator';
-import xss from "xss";
-import {MongoClient} from "mongodb";
-import dotenv from "dotenv";
+import xss from 'xss';
 
 dotenv.config();
 
@@ -23,7 +23,7 @@ const COLLECTION = 'xkom-items';
 const url = process.env.MONGO_URL || '';
 
 router.get('/', async (req: Request<{}, {}, {}, IRequest>, res: Response) => {
-  const {page: pageRaw = '', pageSize: pageSizeRaw = '', search: searchRaw = ''} = req.query;
+  const { page: pageRaw = '', pageSize: pageSizeRaw = '', search: searchRaw = '' } = req.query;
   const page = parseInt(pageRaw, 10) || DEFAULT_PAGE;
   const pageSize = parseInt(pageSizeRaw, 10) || DEFAULT_PAGE_SIZE;
   const search = validator.escape(xss(searchRaw)).slice(0, MAX_SEARCH_LINE);
@@ -36,7 +36,7 @@ router.get('/', async (req: Request<{}, {}, {}, IRequest>, res: Response) => {
     await client.connect();
     const collection = client.db().collection(COLLECTION);
 
-    const pipeline = [
+    const pipeline: Document[] = [
       { $sort: { _id: -1 } },
       {
         $facet: {
@@ -54,13 +54,12 @@ router.get('/', async (req: Request<{}, {}, {}, IRequest>, res: Response) => {
     ];
 
     if (search) {
-      // @ts-ignore
       pipeline.unshift({ $match: { $text: { $search: search } } });
     }
 
     const result = await collection.aggregate(pipeline).toArray();
     return res.status(200).send(result);
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     return res.status(500).send({ error: err });
   }
