@@ -1,0 +1,48 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI - master
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  bump-version:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Runs a single command using the runners shell
+      - name:  'Automated Version Bump'
+        uses: tool3/bump@v1.1.9
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          user: 'github CI'
+          email: 'github@semenyuk.eu'
+
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Deploy to dokku
+        uses: idoberko2/dokku-deploy-github-action@v1.0.1
+        with:
+            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+            dokku-host: 'semenyuk.eu'
+            app-name: 'xkom-backend'
+            ssh-port: 9647
