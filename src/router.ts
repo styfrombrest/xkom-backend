@@ -21,6 +21,7 @@ const MAX_SEARCH_LINE = 63;
 const COLLECTION = 'xkom-items';
 
 const url = process.env.MONGO_URL || '';
+const mongoOptions = { serverSelectionTimeoutMS: 3000 };
 
 router.get('/', async (req: Request<{}, {}, {}, IRequest>, res: Response) => {
   const { page: pageRaw = '', pageSize: pageSizeRaw = '', search: searchRaw = '' } = req.query;
@@ -31,7 +32,7 @@ router.get('/', async (req: Request<{}, {}, {}, IRequest>, res: Response) => {
   res.setHeader('Content-Type', 'application/json');
 
   try {
-    const client = new MongoClient(url);
+    const client = new MongoClient(url, mongoOptions);
 
     await client.connect();
     const collection = client.db().collection(COLLECTION);
